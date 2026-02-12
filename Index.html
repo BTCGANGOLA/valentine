@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Will you be my Valentine?</title>
+
+  <!-- Fonte bonita (podes trocar) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --card-bg: rgba(10, 10, 12, .55);
+      --yes: #ff3b7a;
+      --no: #ffffff;
+      --text: #fff;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      overflow: hidden;
+
+      /* 👉 FOTO DE FUNDO: troca "bg.jpg" pela vossa foto */
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255,59,122,.35), transparent 55%),
+        radial-gradient(circle at 70% 80%, rgba(255,255,255,.22), transparent 55%),
+        linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.65)),
+        url("bg.jpg") center/cover no-repeat fixed;
+    }
+
+    .wrap {
+      position: relative;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(720px, 92vw);
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 24px;
+      padding: clamp(18px, 4vw, 34px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      position: relative;
+    }
+
+    .title {
+      font-family: "Great Vibes", cursive;
+      font-size: clamp(44px, 6vw, 78px);
+      line-height: 1.05;
+      margin: 0 0 10px;
+      text-shadow: 0 10px 35px rgba(0,0,0,.35);
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      font-weight: 300;
+      opacity: .95;
+      font-size: clamp(14px, 2.3vw, 18px);
+    }
+
+    .btnRow {
+      position: relative;
+      height: 110px;
+      margin-top: 14px;
+      display: grid;
+      place-items: center;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      user-select: none;
+    }
+
+    .btn:active { transform: scale(.98); }
+    .btn:hover { filter: brightness(1.04); }
+
+    .yes {
+      background: var(--yes);
+      color: #fff;
+      box-shadow: 0 14px 30px rgba(255,59,122,.35);
+      margin-right: 10px;
+    }
+    .yes:hover { transform: translateY(-1px); }
+
+    /* "No" vai ser posicionado via JS */
+    .no {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.25);
+      box-shadow: 0 12px 26px rgba(0,0,0,.25);
+      position: absolute;
+      left: 50%;
+      top: 65%;
+      transform: translate(-50%, -50%);
+    }
+
+    .footerNote {
+      margin-top: 18px;
+      font-size: 12px;
+      opacity: .85;
+    }
+
+    /* Mensagem final */
+    .final {
+      display: none;
+      margin-top: 14px;
+      font-size: clamp(16px, 2.5vw, 20px);
+      font-weight: 500;
+    }
+
+    .final strong { color: #ffd1e1; }
+
+    /* Corações (partículas) */
+    .heart {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      transform: rotate(45deg);
+      background: #ff3b7a;
+      opacity: .95;
+      pointer-events: none;
+      border-radius: 2px;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,.25));
+      animation: floatUp var(--dur) ease-out forwards;
+    }
+    .heart:before, .heart:after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: inherit;
+      border-radius: 50%;
+    }
+    .heart:before { left: -7px; top: 0; }
+    .heart:after  { left: 0; top: -7px; }
+
+    @keyframes floatUp {
+      0%   { transform: translate(0,0) rotate(45deg) scale(1); opacity: 0; }
+      10%  { opacity: 1; }
+      100% { transform: translate(var(--dx), calc(-1 * var(--dy))) rotate(45deg) scale(var(--s)); opacity: 0; }
+    }
+
+    /* Confetti */
+    .confetti {
+      position: absolute;
+      width: 8px;
+      height: 14px;
+      opacity: .9;
+      pointer-events: none;
+      animation: fall var(--dur) linear forwards;
+      border-radius: 2px;
+      transform: rotate(var(--rot));
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,.25));
+    }
+    @keyframes fall {
+      0%   { transform: translate(var(--x), var(--y)) rotate(var(--rot)); opacity: 0; }
+      10%  { opacity: 1; }
+      100% { transform: translate(calc(var(--x) + var(--dx)), calc(var(--y) + var(--dy))) rotate(calc(var(--rot) + 240deg)); opacity: 0; }
+    }
+
+    /* Pequena animação de “pulse” no card ao dizer sim */
+    .pulse {
+      animation: pulse .6s ease-in-out 1;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+
+    /* Para telemóvel: deixa botões maiores */
+    @media (max-width: 420px) {
+      .btn { font-size: 17px; padding: 14px 20px; }
+      .btnRow { height: 130px; }
+      .no { top: 70%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap" id="wrap">
+    <div class="card" id="card">
+      <h1 class="title">Marcia Chitas</h1>
+      <h1 class="title">Will you be my Valentine?</h1>
+      <p class="subtitle">Uma pergunta simples…andas muito chata 😍</p>
+
+      <div class="btnRow" id="arena">
+        <button class="btn yes" id="yesBtn">Yes 💖</button>
+        <button class="btn no" id="noBtn">No 🙈</button>
+      </div>
+
+      <div class="final" id="finalMsg">
+        YESSS! 🥹💘 <br/>
+        <span>Prometo tratar-te como <strong>rainha</strong> hoje e sempre.</span>
+      </div>
+
+      <div class="footerNote">Dica: tenta clicar “No” 😄</div>
+    </div>
+  </div>
+
+  <script>
+    const wrap = document.getElementById("wrap");
+    const card = document.getElementById("card");
+    const arena = document.getElementById("arena");
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn  = document.getElementById("noBtn");
+    const finalMsg = document.getElementById("finalMsg");
+
+    // Posiciona "No" aleatoriamente dentro da área
+    function moveNoButton() {
+      const rect = arena.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+
+      // margem para não sair fora
+      const pad = 8;
+      const maxX = rect.width - b.width - pad * 2;
+      const maxY = rect.height - b.height - pad * 2;
+
+      const x = pad + Math.random() * Math.max(0, maxX);
+      const y = pad + Math.random() * Math.max(0, maxY);
+
+      noBtn.style.left = x + "px";
+      noBtn.style.top  = y + "px";
+      noBtn.style.transform = "translate(0,0)";
+    }
+
+    // No foge ao aproximar (mouse) e ao tocar (mobile)
+    noBtn.addEventListener("mouseenter", moveNoButton);
+    noBtn.addEventListener("touchstart", (e) => { e.preventDefault(); moveNoButton(); }, {passive:false});
+    // também foge se ela tentar clicar
+    noBtn.addEventListener("click", (e) => { e.preventDefault(); moveNoButton(); });
+
+    // Explosão de corações
+    function heartsBurst(count = 60) {
+      const rect = card.getBoundingClientRect();
+      for (let i = 0; i < count; i++) {
+        const h = document.createElement("div");
+        h.className = "heart";
+
+        const startX = rect.left + rect.width / 2 + (Math.random() * 60 - 30);
+        const startY = rect.top  + rect.height / 2 + (Math.random() * 40 - 20);
+
+        const dx = (Math.random() * 360 - 180) + "px";
+        const dy = (220 + Math.random() * 260) + "px";
+        const dur = (900 + Math.random() * 800) + "ms";
+        const s  = (0.8 + Math.random() * 1.2);
+
+        h.style.left = startX + "px";
+        h.style.top  = startY + "px";
+        h.style.setProperty("--dx", dx);
+        h.style.setProperty("--dy", dy);
+        h.style.setProperty("--dur", dur);
+        h.style.setProperty("--s", s);
+
+        wrap.appendChild(h);
+        setTimeout(() => h.remove(), 1800);
+      }
+    }
+
+    // Confetti simples
+    function confettiPop(count = 80) {
+      const rect = card.getBoundingClientRect();
+      const colors = ["#ff3b7a", "#ffd166", "#06d6a0", "#4cc9f0", "#b5179e", "#ffffff"];
+
+      for (let i = 0; i < count; i++) {
+        const c = document.createElement("div");
+        c.className = "confetti";
+
+        const startX = rect.left + rect.width / 2;
+        const startY = rect.top  + rect.height / 2;
+
+        const dx = (Math.random() * 520 - 260) + "px";
+        const dy = (420 + Math.random() * 380) + "px";
+        const dur = (900 + Math.random() * 900) + "ms";
+        const rot = (Math.random() * 360) + "deg";
+        const x = (Math.random() * 60 - 30) + "px";
+        const y = (Math.random() * 40 - 20) + "px";
+
+        c.style.left = startX + "px";
+        c.style.top  = startY + "px";
+        c.style.background = colors[Math.floor(Math.random() * colors.length)];
+        c.style.setProperty("--dx", dx);
+        c.style.setProperty("--dy", dy);
+        c.style.setProperty("--dur", dur);
+        c.style.setProperty("--rot", rot);
+        c.style.setProperty("--x", x);
+        c.style.setProperty("--y", y);
+
+        wrap.appendChild(c);
+        setTimeout(() => c.remove(), 1900);
+      }
+    }
+
+    function onYes() {
+      // Esconde botões e mostra mensagem
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+      finalMsg.style.display = "block";
+      card.classList.add("pulse");
+
+      // Explosões
+      heartsBurst(70);
+      confettiPop(90);
+
+      // Repetir uns “pops” pequenos
+      let pops = 0;
+      const t = setInterval(() => {
+        heartsBurst(20);
+        pops++;
+        if (pops >= 3) clearInterval(t);
+      }, 600);
+    }
+
+    yesBtn.addEventListener("click", onYes);
+
+    // posicionamento inicial do "No"
+    setTimeout(moveNoButton, 200);
+    window.addEventListener("resize", () => setTimeout(moveNoButton, 150));
+  </script>
+</body>
+</html>
